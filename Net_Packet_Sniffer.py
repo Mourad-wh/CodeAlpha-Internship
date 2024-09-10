@@ -3,6 +3,7 @@ from scapy.layers.http import HTTPRequest
 from scapy.layers.inet import IP
 import os
 from datetime import datetime
+import socket
 
 def clear_screen():
     if os.name == 'nt':
@@ -18,15 +19,15 @@ def capture_packets(packet):
     try:
         # Check if the packet contains an HTTP request
         if packet.haslayer(HTTPRequest):
-            http_layer = packet[HTTPRequest]  # Get the HTTP layer.
+            http_layer = packet[HTTPRequest]  # Get the HTTP layer
             request_info = f"HTTP Request: {http_layer.Method.decode()} {http_layer.Host.decode()}{http_layer.Path.decode()}"
             print(request_info)
             captured_data.append(request_info)
         
         # Check if the packet contains an IP layer
         if packet.haslayer(IP):
-            ip_layer = packet[IP]  # Get the IP layer.
-            ip_info = f"Source IP: {ip_layer.src} -> Destination IP: {ip_layer.dst}"
+            ip_layer = packet[IP]  # Get the IP layer
+            ip_info = f"Source IP: {get_domain_name(ip_layer.src)} -> Destination IP: {get_domain_name(ip_layer.dst)}"
             print(ip_info)
             captured_data.append(ip_info)
     except Exception as e:
@@ -61,6 +62,13 @@ def save(captured_data, protocol):
         file.write(f"\n{current_time} - {formatted_date}\n")
         for data in captured_data:
             file.write(f"{data}\n")
+
+def get_domain_name(ip_address):
+    try:
+        host, _, _ = socket.gethostbyaddr(ip_address)
+        return host
+    except socket.herror:
+        return ip_address
 
 # Checking the system to specify the interface: 
 if os.name == 'nt':
@@ -97,3 +105,4 @@ if captured_data:
     print("\nData saved successfully. Program finished.")
 else:
     print("\nNo data captured. Program finished.")
+
